@@ -67,9 +67,13 @@ class FoodAppGUI:
         deskripsi_makanan_list = [entry.get() for entry in self.deskripsi_makanan_entries if entry.get()]
 
         if hasattr(self, 'gambar'):
-            image_bytes = io.BytesIO()
-            self.gambar.save(image_bytes, format='PNG')
-            image_binary = image_bytes.getvalue()
+            try:
+                image_bytes = io.BytesIO()
+                self.gambar.save(image_bytes, format='PNG')
+                image_binary = image_bytes.getvalue()
+            except Exception as e:
+                messagebox.showerror("Error", f"Gagal mengonversi gambar: {str(e)}")
+                return
 
             if self.backend.save_makanan(nama, tempat, image_binary, harga):
                 id_makanan = self.backend.cursor.lastrowid  # Ambil ID makanan yang baru saja disimpan
@@ -89,6 +93,7 @@ class FoodAppGUI:
                 messagebox.showerror("Error", "Gagal menyimpan data makanan.")
         else:
             messagebox.showerror("Error", "Harap pilih gambar terlebih dahulu.")
+
 
 if __name__ == "__main__":
     root = tk.Tk()
