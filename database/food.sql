@@ -15,7 +15,16 @@ CREATE TABLE IF NOT EXISTS Makanan (
 
 CREATE TABLE IF NOT EXISTS Kategori (
     id_kategori INT AUTO_INCREMENT PRIMARY KEY,
-    deskripsi_makanan JSON,
-    id_makanan INT,
-    FOREIGN KEY (id_makanan) REFERENCES Makanan (id_makanan)
+    deskripsi_makanan VARCHAR (225)
 );
+
+CREATE TABLE IF NOT EXISTS Kategori_makanan (
+    id_kategori_makanan INT AUTO_INCREMENT PRIMARY KEY,
+    id_kategori INT,
+    id_makanan INT,
+    FOREIGN KEY (id_kategori) REFERENCES Kategori(id_kategori),
+    FOREIGN KEY (id_makanan) REFERENCES Makanan(id_makanan)
+);
+
+
+

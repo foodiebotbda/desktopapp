@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import filedialog
@@ -13,7 +12,6 @@ class FoodAppGUI:
         self.root.geometry("700x600+300+200")
         self.root.config(bg="#06283D")
         self.backend = backend
-        self.deskripsi_makanan_entries = []  # List untuk menyimpan 7 deskripsi makanan
 
         self.nama_label = tk.Label(root, text="Nama Makanan", font=("Arial", 12), bg="#06283D", fg="#fff")
         self.nama_label.place(x=50, y=90)
@@ -39,20 +37,23 @@ class FoodAppGUI:
         self.gambar_button = tk.Button(root, text="Pilih Gambar", font=("Arial", 12), command=self.import_gambar)
         self.gambar_button.place(x=200, y=210)
 
-        self.kategori_label = tk.Label(root, text="Kategori", font=("Arial", 12), bg="#06283D", fg="#fff")
-        self.kategori_label.place(x=50, y=250)
+        self.kategori_labels = []
+        self.kategori_dropdowns = []
 
-        for i in range(10):
-            deskripsi_entry = tk.Entry(root, font=("Arial", 12))
-            deskripsi_entry.place(x=200, y=250 + (i * 40))
-            self.deskripsi_makanan_entries.append(deskripsi_entry)
-        for i in range(10):
-            deskripsi_entry = tk.Entry(root, font=("Arial", 12))
-            deskripsi_entry.place(x=400, y=250 + (i * 40))
-            self.deskripsi_makanan_entries.append(deskripsi_entry)
+        for i in range(1, 11):
+            kategori_label = tk.Label(root, text=f"Kategori {i}", font=("Arial", 12), bg="#06283D", fg="#fff")
+            kategori_label.place(x=50, y=250 + i * 40)
+            self.kategori_labels.append(kategori_label)
+
+            kategori_options = self.backend.get_kategori_descriptions()
+            selected_kategori = tk.StringVar(root)
+            kategori_dropdown = tk.OptionMenu(root, selected_kategori, *kategori_options)
+            kategori_dropdown.config(font=("Arial", 12))
+            kategori_dropdown.place(x=200, y=250 + i * 40)
+            self.kategori_dropdowns.append((selected_kategori, kategori_dropdown))
 
         self.simpan_button = tk.Button(root, text="Simpan", font=("Arial", 12), command=self.simpan_data)
-        self.simpan_button.place(x=200, y=650)
+        self.simpan_button.place(x=200, y=600)
 
     def import_gambar(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png")])
@@ -64,7 +65,7 @@ class FoodAppGUI:
         nama = self.nama_entry.get()
         tempat = self.tempat_entry.get()
         harga = float(self.harga_entry.get())
-        deskripsi_makanan_list = [entry.get() for entry in self.deskripsi_makanan_entries if entry.get()]
+        selected_kategori_ids = []
 
         if hasattr(self, 'gambar'):
             try:
@@ -75,19 +76,26 @@ class FoodAppGUI:
                 messagebox.showerror("Error", f"Gagal mengonversi gambar: {str(e)}")
                 return
 
-            if self.backend.save_makanan(nama, tempat, image_binary, harga):
-                id_makanan = self.backend.cursor.lastrowid  # Ambil ID makanan yang baru saja disimpan
+            for selected_kategori, _ in self.kategori_dropdowns:
+                selected_kategori_desc = selected_kategori.get()
+                # Cek apakah dropdown kategori telah dipilih
+                if selected_kategori_desc:
+                    # Cari ID kategori berdasarkan deskripsi
+                    kategori_id = self.backend.get_kategori_id_by_description(selected_kategori_desc)
+                    selected_kategori_ids.append(kategori_id)
 
-                # Simpan setiap deskripsi makanan ke database
-                for deskripsi in deskripsi_makanan_list:
-                    self.backend.save_kategori(id_makanan, deskripsi)
+            # Cek apakah setidaknya satu kategori telah dipilih
+            if not selected_kategori_ids:
+                messagebox.showerror("Error", "Harap pilih setidaknya satu kategori.")
+                return
 
-                messagebox.showinfo("Sukses", "Data makanan dan kategori berhasil disimpan.")
+            if self.backend.save_makanan(nama, tempat, image_binary, harga, selected_kategori_ids):
+                messagebox.showinfo("Sukses", "Data makanan berhasil disimpan.")
                 self.nama_entry.delete(0, tk.END)
                 self.tempat_entry.delete(0, tk.END)
                 self.harga_entry.delete(0, tk.END)
-                for deskripsi_entry in self.deskripsi_makanan_entries:
-                    deskripsi_entry.delete(0, tk.END)
+                for selected_kategori, _ in self.kategori_dropdowns:
+                    selected_kategori.set("")  # Reset dropdown kategori
                 self.gambar_label.config(text="")  # Reset label gambar
             else:
                 messagebox.showerror("Error", "Gagal menyimpan data makanan.")
@@ -100,4 +108,3 @@ if __name__ == "__main__":
     backend = FoodAppBackend()
     app = FoodAppGUI(root, backend)
     root.mainloop()
-
