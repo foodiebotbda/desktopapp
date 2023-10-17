@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS Makanan (
     id_makanan INT AUTO_INCREMENT PRIMARY KEY,
     nama_makanan VARCHAR(255),
     tempat VARCHAR(255),
-    gambar LONGBLOB,
+    gambar VARCHAR(255),
     harga DECIMAL(10, 2)
 );
 
